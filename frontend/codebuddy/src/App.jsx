@@ -34,13 +34,13 @@ function App() {
 
       const data = await response.json();
 
-      setFiles(data.files);
+      setFiles(data.files || []);
 
-      if (data.files.length > 0) {
+      if (data.files && data.files.length > 0) {
         setSelectedFile(data.files[0]);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to connect to backend");
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-
       {/* Header */}
       <header className="border-b border-white/10 px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
@@ -71,10 +70,8 @@ function App() {
 
       {/* Main */}
       <main className="mx-auto max-w-7xl px-6 py-10">
-
         {/* Prompt Section */}
         <section className="mx-auto max-w-3xl">
-
           <h2 className="mb-3 text-center text-4xl font-bold">
             Build an app with AI
           </h2>
@@ -85,7 +82,6 @@ function App() {
 
           {/* Prompt Box */}
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -94,7 +90,6 @@ function App() {
             />
 
             <div className="flex justify-end">
-
               <button
                 onClick={generateApp}
                 disabled={loading}
@@ -102,7 +97,6 @@ function App() {
               >
                 {loading ? "Building..." : "Generate App →"}
               </button>
-
             </div>
           </div>
 
@@ -112,16 +106,13 @@ function App() {
               {error}
             </div>
           )}
-
         </section>
 
         {/* Generated Project */}
         {files.length > 0 && (
           <section className="mt-12">
-
             {/* Project Header */}
             <div className="mb-5 flex items-center justify-between">
-
               <div>
                 <h2 className="text-xl font-semibold">
                   Generated Project
@@ -139,21 +130,17 @@ function App() {
               >
                 Open App
               </button>
-
             </div>
 
             {/* File Explorer + Code Viewer */}
             <div className="grid min-h-[500px] grid-cols-[220px_1fr] overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
-
               {/* File Explorer */}
               <aside className="border-r border-white/10">
-
                 <div className="border-b border-white/10 px-4 py-3 text-sm font-medium">
                   Project
                 </div>
 
                 <div className="p-2">
-
                   {files.map((file) => (
                     <button
                       key={file.path}
@@ -167,14 +154,11 @@ function App() {
                       {file.path}
                     </button>
                   ))}
-
                 </div>
-
               </aside>
 
               {/* Code Viewer */}
               <div className="flex flex-col">
-
                 <div className="border-b border-white/10 px-5 py-3 text-sm text-gray-300">
                   {selectedFile?.path || "Select a file"}
                 </div>
@@ -184,16 +168,11 @@ function App() {
                     {selectedFile?.content || "No file selected"}
                   </code>
                 </pre>
-
               </div>
-
             </div>
-
           </section>
         )}
-
       </main>
-
     </div>
   );
 }
