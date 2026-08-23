@@ -7,6 +7,8 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState("");
 
+  const BACKEND_URL = "https://ai-app-builder-c25a.onrender.com";
+
   const generateApp = async () => {
     if (!prompt.trim()) return;
 
@@ -16,18 +18,15 @@ function App() {
     setSelectedFile(null);
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompt: prompt,
-          }),
-        }
-      );
+      const response = await fetch(`${BACKEND_URL}/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to generate application");
@@ -49,7 +48,7 @@ function App() {
 
   const openGeneratedApp = () => {
     window.open(
-      "http://127.0.0.1:8000/preview/index.html",
+      `${BACKEND_URL}/preview/index.html`,
       "_blank"
     );
   };
@@ -60,18 +59,15 @@ function App() {
       {/* Header */}
       <header className="border-b border-white/10 px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-
           <h1 className="text-xl font-semibold">
-            ⚡ AI App Builder
+            AI App Builder
           </h1>
 
           <div className="text-sm text-gray-400">
             Mistral × LangGraph
           </div>
-
         </div>
       </header>
-
 
       {/* Main */}
       <main className="mx-auto max-w-7xl px-6 py-10">
@@ -86,7 +82,6 @@ function App() {
           <p className="mb-8 text-center text-gray-400">
             Describe what you want to build and let the agents handle the rest.
           </p>
-
 
           {/* Prompt Box */}
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -109,9 +104,7 @@ function App() {
               </button>
 
             </div>
-
           </div>
-
 
           {/* Error */}
           {error && (
@@ -122,10 +115,8 @@ function App() {
 
         </section>
 
-
         {/* Generated Project */}
         {files.length > 0 && (
-
           <section className="mt-12">
 
             {/* Project Header */}
@@ -141,17 +132,15 @@ function App() {
                 </p>
               </div>
 
-
               {/* Open App Button */}
               <button
                 onClick={openGeneratedApp}
                 className="rounded-xl bg-white px-5 py-2.5 font-medium text-black transition hover:bg-gray-200"
               >
-                🚀 Open App
+                Open App
               </button>
 
             </div>
-
 
             {/* File Explorer + Code Viewer */}
             <div className="grid min-h-[500px] grid-cols-[220px_1fr] overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
@@ -160,13 +149,12 @@ function App() {
               <aside className="border-r border-white/10">
 
                 <div className="border-b border-white/10 px-4 py-3 text-sm font-medium">
-                  📁 Project
+                  Project
                 </div>
 
                 <div className="p-2">
 
                   {files.map((file) => (
-
                     <button
                       key={file.path}
                       onClick={() => setSelectedFile(file)}
@@ -176,15 +164,13 @@ function App() {
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`}
                     >
-                      📄 {file.path}
+                      {file.path}
                     </button>
-
                   ))}
 
                 </div>
 
               </aside>
-
 
               {/* Code Viewer */}
               <div className="flex flex-col">
@@ -204,7 +190,6 @@ function App() {
             </div>
 
           </section>
-
         )}
 
       </main>
