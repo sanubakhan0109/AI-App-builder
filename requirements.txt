@@ -1,4 +1,5 @@
-streamlit
+fastapi
+uvicorn
 langgraph
 langchain
 langchain-mistralai
