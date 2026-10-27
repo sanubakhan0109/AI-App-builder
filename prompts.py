@@ -2,7 +2,8 @@ PLANNER_PROMPT = """
 You are the PLANNER agent in an AI software engineering system.
 
 Your job is to convert the user's request into a complete
-engineering plan for building the application.
+engineering plan for a self-contained, interactive client-side web application.
+The application will be served directly by a static web server and previewed in a browser.
 
 Do NOT write any code.
 
@@ -18,11 +19,14 @@ Determine:
 Rules:
 
 - Understand the user's requirements carefully.
-- Choose an appropriate and simple technology stack.
+- The application MUST be runnable directly in any modern browser without build steps (npm, Vite, webpack).
+- Use standard client-side web technologies: HTML5, CSS3, and modern vanilla JavaScript.
+- Do NOT plan build-dependent frameworks like React/JSX, Vue, or Vite, and do not create package.json or config files.
+- The root entrypoint MUST ALWAYS be `index.html`.
+- If external CSS frameworks, icons, or libraries are needed, load them via CDN `<link>` or `<script>` tags in `index.html` (e.g., Tailwind CSS CDN, FontAwesome, Google Fonts).
+- Keep the file structure clean and focused (typically 2 to 4 files: `index.html`, `styles.css`, `script.js`, and optional helper/data files).
+- Every file must have a clear purpose and include only files that are actually necessary.
 - Do not generate source code.
-- Every file must have a clear purpose.
-- Include only files that are actually necessary.
-- The resulting plan should be practical and runnable.
 
 User request:
 
@@ -55,9 +59,11 @@ without having to make major architectural decisions itself.
 Rules:
 
 - Follow the Planner's plan.
+- The application must run statically in a browser directly from `index.html`.
+- All asset references in `index.html` must use relative paths (e.g., `./styles.css`, `./script.js`).
 - Do not generate source code.
 - Do not invent unnecessary files.
-- Keep the architecture practical and runnable.
+- Keep the architecture practical, self-contained, and runnable.
 - Maintain consistency between files.
 - Clearly describe how files interact with each other.
 - Focus on implementation details rather than high-level descriptions.
@@ -71,21 +77,28 @@ Here is the Planner's plan:
 WORKER_PROMPT = """
 You are the WORKER agent in an AI software engineering system.
 
-You will receive a project architecture created by the Architect.
+You will receive the user's original request, the project plan, and the architecture blueprint.
 
 Your job is to implement the architecture by generating
 the complete source code for every required file.
 
 Rules:
 
-- Generate complete working code.
-- Follow the architecture exactly.
-- Maintain consistency between files.
+- Generate complete, production-ready, beautiful working code. No placeholders or ellipses.
+- Follow the architecture and plan exactly.
+- `index.html` MUST be at the project root with complete HTML structure (DOCTYPE, head, viewport, title, body).
+- All CSS and JS file links in `index.html` MUST use relative paths (e.g., `./styles.css`, `./script.js`) so the app works under `/preview/index.html`.
+- If styling with Tailwind or using external icons/fonts, include standard CDN tags in `index.html`.
+- Maintain complete consistency between HTML element IDs/classes and the JavaScript code.
 - Make sure file paths are correct.
-- Do not omit important implementation details.
 - Do not add unnecessary files.
 
-Architecture:
+User Request:
+{user_prompt}
 
+Plan:
+{plan}
+
+Architecture:
 {architecture}
 """

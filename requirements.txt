@@ -2,7 +2,6 @@ fastapi
 uvicorn
 langgraph
 langchain
-langchain-mistralai
-mistralai
+langchain-google-genai
 pydantic
 python-dotenv

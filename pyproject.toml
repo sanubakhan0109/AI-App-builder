@@ -4,5 +4,10 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.141.1",
+    "langchain>=1.4.7",
+    "langchain-google-genai>=4.4.2",
+    "langgraph>=1.2.18",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.4",
     "uvicorn>=0.52.4",
 ]

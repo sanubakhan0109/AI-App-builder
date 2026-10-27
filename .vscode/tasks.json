@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run AI App Builder backend",
+			"type": "shell",
+			"command": "uv",
+			"args": [
+				"run",
+				"uvicorn",
+				"api:app",
+				"--reload"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

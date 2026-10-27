@@ -60,7 +60,7 @@ The generated files are then written to the generated project directory.
 ### AI and Agentic AI
 
 - Python
-- Mistral
+- Gemini (`gemini-3.5-flash-lite`)
 - LangChain
 - LangGraph
 - Pydantic
@@ -80,6 +80,26 @@ The generated files are then written to the generated project directory.
 
 - uv
 - python-dotenv
+
+## Backend Setup
+
+Create a root `.env` file with your Gemini API key:
+
+```env
+GOOGLE_API_KEY=your_key_here
+```
+
+Install the backend dependencies and start the API from the repository root:
+
+```powershell
+uv sync
+uv run uvicorn api:app --reload
+```
+
+The API key is used only by the Python backend and must not be added to the frontend.
+Generation has a 60-second frontend deadline and a 55-second backend deadline. Client
+disconnects cancel the asynchronous graph run, and each Gemini call has a 45-second
+request timeout with bounded retries (max 1 retry).
 
 ## Project Structure
 
