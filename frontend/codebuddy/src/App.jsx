@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import "./App.css";
-
-const BACKEND_URL = "http://127.0.0.1:8000";
-const GENERATION_TIMEOUT_MS = 60_000;
-const GENERATION_TIMEOUT_MESSAGE = "Generation took too long. Please try again.";
+import {
+  BACKEND_URL,
+  GENERATION_TIMEOUT_MS,
+  GENERATION_TIMEOUT_MESSAGE,
+} from "./config";
 
 function AssistantAvatar({ status }) {
   const messages = {
@@ -63,6 +64,7 @@ function App() {
   const [status, setStatus] = useState("idle");
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
   const [error, setError] = useState("");
   const requestInProgress = useRef(false);
 
@@ -78,6 +80,7 @@ function App() {
     setError("");
     setFiles([]);
     setSelectedFile(null);
+    setPreviewUrl("");
 
     try {
       const request = (async () => {
@@ -126,11 +129,24 @@ function App() {
       setFiles(data.files);
       const defaultFile = data.files.find((f) => f.path === "index.html" || f.path.endsWith("/index.html")) || data.files[0];
       setSelectedFile(defaultFile);
+      const targetPreview = data.preview_url
+        ? `${BACKEND_URL}${data.preview_url.startsWith("/") ? "" : "/"}${data.preview_url}`
+        : `${BACKEND_URL}/preview/index.html`;
+      setPreviewUrl(targetPreview);
       setStatus("success");
     } catch (requestError) {
-      const message = didTimeout || requestError.name === "AbortError"
-        ? GENERATION_TIMEOUT_MESSAGE
-        : requestError.message || "Couldn’t connect to the builder. Check your connection and try again.";
+      let message;
+      if (didTimeout || requestError.name === "AbortError") {
+        message = GENERATION_TIMEOUT_MESSAGE;
+      } else if (
+        requestError.message === "Failed to fetch" ||
+        requestError.name === "TypeError" ||
+        (typeof requestError.message === "string" && requestError.message.includes("NetworkError"))
+      ) {
+        message = `Unable to reach the backend server at ${BACKEND_URL}. Please check your connection or verify that the backend is running.`;
+      } else {
+        message = requestError.message || "Couldn’t connect to the builder. Check your connection and try again.";
+      }
       setError(message);
       setStatus("error");
     } finally {
@@ -157,7 +173,8 @@ function App() {
   };
 
   const openGeneratedApp = () => {
-    window.open(`${BACKEND_URL}/preview/index.html`, "_blank", "noopener,noreferrer");
+    const targetUrl = previewUrl || `${BACKEND_URL}/preview/index.html`;
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
