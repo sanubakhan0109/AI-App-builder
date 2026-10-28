@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -15,7 +16,10 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("app_builder.api")
-GENERATION_TIMEOUT_SECONDS = 55
+
+# Backend deadline for one generation (planner -> architect -> worker).
+# Must stay below the frontend deadline (170s in frontend/codebuddy/src/config.js).
+GENERATION_TIMEOUT_SECONDS = int(os.getenv("GENERATION_TIMEOUT_SECONDS", "150"))
 
 
 # ============================================================
@@ -31,16 +35,37 @@ app = FastAPI(
 # CORS
 # ============================================================
 
+DEFAULT_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://ai-app-builder-frontend-ovkp.onrender.com",
+]
+
+
+def _build_allowed_origins() -> list[str]:
+    """Default origins plus any comma-separated origins in ALLOWED_ORIGINS."""
+    origins = list(DEFAULT_ALLOWED_ORIGINS)
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(","):
+        # Origins never end with "/"; a trailing slash would never match.
+        cleaned = origin.strip().rstrip("/")
+        if cleaned and cleaned not in origins:
+            origins.append(cleaned)
+    return origins
+
+
+ALLOWED_ORIGINS = _build_allowed_origins()
+logger.info("[API] CORS allowed origins: %s", ALLOWED_ORIGINS)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ============================================================
 # PREVIEW DIRECTORY
@@ -149,9 +174,28 @@ def _generation_error(error: Exception) -> tuple[int, str]:
         return 504, "Generation took too long. Gemini request timed out. Please try again."
 
     if "api key required" in error_text or "google_api_key" in error_text:
-        return 500, "GOOGLE_API_KEY is not configured in backend environment. Please check your .env file."
+        return 500, "GOOGLE_API_KEY is not configured in the backend environment. Set it in the Render service's Environment settings."
 
-    return 502, f"App generation failed ({type(error).__name__}). Please try again."
+    if (
+        code == 404
+        or code_text == "404"
+        or provider_status == "NOT_FOUND"
+        or ("model" in error_text and "not found" in error_text)
+    ):
+        return 502, (
+            f"Gemini model '{os.getenv('GEMINI_MODEL', 'gemini-3.5-flash-lite')}' was not found or is not "
+            "available for this API key. Set GEMINI_MODEL to a model your key can use."
+        )
+
+    # Surface the real provider reason instead of a bare exception class name.
+    # The API key is redacted in case a library echoes it in the message.
+    detail = str(error).strip().replace("\n", " ")
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if api_key:
+        detail = detail.replace(api_key, "[redacted]")
+    if len(detail) > 300:
+        detail = detail[:300] + "..."
+    return 502, f"App generation failed ({type(error).__name__}): {detail or 'no error message from provider'}"
 
 
 # ============================================================
@@ -256,5 +300,6 @@ async def generate_app(payload: GenerateRequest, request: Request):
                 "content": file.content,
             }
             for file in project.files
-        ]
+        ],
+        "preview_url": "/preview/index.html",
     }
